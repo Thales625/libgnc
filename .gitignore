@@ -1,0 +1,5 @@
+# esp-idf
+**/build/
+**/build_pc/
+**/sdkconfig
+**/sdkconfig.old
