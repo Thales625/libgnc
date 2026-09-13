@@ -5,6 +5,7 @@
 
 #include "libgnc/math/vector.hpp"
 
+#include <cmath>
 #include <iostream>
 
 #define NX 13
@@ -111,46 +112,7 @@ public:
 
                 // control
                 this->lqr.update(this->kalman.model_state());
-                this->rotor_cmd = gnc::control::motor_mix(this->lqr.u[0], this->lqr.u[1], this->lqr.u[2], this->lqr.u[3]);
-
-                /*
-                // altitude
-                std::cout << "altitude: " << this->altitude_baro << " ";
-                std::cout << std::endl;
-                */
-
-                /*
-                // accel
-                std::cout << "accel_x: " << this->accel[0] << " ";
-                std::cout << "accel_y: " << this->accel[1] << " ";
-                std::cout << "accel_z: " << this->accel[2] << " ";
-                std::cout << std::endl;
-                */
-
-                /*
-                // ang_vel
-                std::cout << "ang_vel_x: " << this->ang_vel[0] << " ";
-                std::cout << "ang_vel_y: " << this->ang_vel[1] << " ";
-                std::cout << "ang_vel_z: " << this->ang_vel[2] << " ";
-                std::cout << std::endl;
-                */
-
-                /*
-                // position
-                std::cout << "x: " << model_state[0] << " ";
-                std::cout << "y: " << model_state[1] << " ";
-                std::cout << "z: " << model_state[2] << " ";
-                std::cout << std::endl;
-                */
-
-                /*
-                // control input
-                std::cout << "thrust: " << this->lqr.u[0] << " ";
-                std::cout << "pitch: " << this->lqr.u[1] << " ";
-                std::cout << "roll: " << this->lqr.u[2] << " ";
-                std::cout << "yaw: " << this->lqr.u[3] << " ";
-                std::cout << std::endl;
-                */
+                this->rotor_cmd = motor_mix(this->lqr.u[0], this->lqr.u[1], this->lqr.u[2], this->lqr.u[3]);
                 break;
 
             case PHASE_AUTO_LAND:
@@ -164,5 +126,37 @@ public:
             default:
                 break;
         }
+    }
+
+private:
+    float force_to_throttle(float force) {
+        constexpr float kt = 1e-6f;
+        constexpr float max_ang_vel = 20e3f * 0.10472f;
+        constexpr float max_thrust = kt * max_ang_vel * max_ang_vel;
+
+        if (force < 0.0f) force = 0.0f;
+        else if (force > max_thrust) force = max_thrust;
+
+        return std::sqrtf(force / max_thrust);
+    }
+
+    gnc::Vec4f motor_mix(float thrust, const float roll_torque, const float pitch_torque, const float yaw_torque) {
+        constexpr float width = 0.2f;
+        constexpr float b_kt_ratio = 2e-8f / 1e-6f;
+
+        const float delta_roll = roll_torque / (4.0f * width);
+        const float delta_pitch = pitch_torque / (4.0f * width);
+        const float delta_yaw = yaw_torque / (4.0f * b_kt_ratio);
+
+        gnc::Vec4f throttle;
+
+        thrust *= 0.25f;
+
+        throttle[0] = force_to_throttle(thrust - delta_pitch + delta_yaw + delta_roll); // FR
+        throttle[1] = force_to_throttle(thrust - delta_pitch - delta_yaw - delta_roll); // FL
+        throttle[2] = force_to_throttle(thrust + delta_pitch - delta_yaw + delta_roll); // BR
+        throttle[3] = force_to_throttle(thrust + delta_pitch + delta_yaw - delta_roll); // BL
+
+        return throttle;
     }
 };

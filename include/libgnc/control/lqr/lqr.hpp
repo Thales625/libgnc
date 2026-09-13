@@ -3,7 +3,6 @@
 #include "libgnc/math/vector.hpp"
 
 #include <cstddef>
-#include <cmath>
 
 namespace gnc::control
 {
@@ -15,8 +14,8 @@ namespace gnc::control
         using ControlMatrix = Matrix<T, NU, NX>;
 
         ControlMatrix K;
-        StateVector target_state; // x, y, z, vx, vy, vz, roll, pitch, yaw, roll_rate, pitch_rate, yaw_rate
-        InputVector u; // thrust, roll_torque, pitch_torque, yaw_torque
+        StateVector target_state;
+        InputVector u;
 
         InputVector u_eq;
 
@@ -32,35 +31,4 @@ namespace gnc::control
             this->u = this->K * error + this->u_eq;
         };
     };
-
-    float force_to_throttle(float force) {
-        constexpr float kt = 1e-6f;
-        constexpr float max_ang_vel = 20e3f * 0.10472f;
-        constexpr float max_thrust = kt * max_ang_vel * max_ang_vel;
-
-        if (force < 0.0f) force = 0.0f;
-        else if (force > max_thrust) force = max_thrust;
-
-        return std::sqrtf(force / max_thrust);
-    }
-
-    Vec4f motor_mix(float thrust, const float roll_torque, const float pitch_torque, const float yaw_torque) {
-        constexpr float width = 0.2f;
-        constexpr float b_kt_ratio = 2e-8f / 1e-6f;
-
-        const float delta_roll = roll_torque / (4.0f * width);
-        const float delta_pitch = pitch_torque / (4.0f * width);
-        const float delta_yaw = yaw_torque / (4.0f * b_kt_ratio);
-
-        Vec4f throttle;
-
-        thrust *= 0.25f;
-
-        throttle[0] = force_to_throttle(thrust - delta_pitch + delta_yaw + delta_roll); // FR
-        throttle[1] = force_to_throttle(thrust - delta_pitch - delta_yaw - delta_roll); // FL
-        throttle[2] = force_to_throttle(thrust + delta_pitch - delta_yaw + delta_roll); // BR
-        throttle[3] = force_to_throttle(thrust + delta_pitch + delta_yaw - delta_roll); // BL
-
-        return throttle;
-    }
 }
