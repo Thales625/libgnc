@@ -2,11 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 if (ESP_PLATFORM)
     # ESP32 BUILD
-    idf_component_register(
-        INCLUDE_DIRS "include"
-    )
+    include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
-    target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++20)
+    project(GNC-LIB)
 
 else()
     # PC BUILD
