@@ -10,6 +10,7 @@
 #include <iostream>
 #endif
 
+#include "libgnc/config.hpp"
 #include "detail/vector_fwd.hpp"
 
 namespace gnc
@@ -58,71 +59,68 @@ namespace gnc
             // methods
             constexpr void print() const {
                 #ifdef ESP_PLATFORM
-                for(std::size_t i = 0; i < Rows; ++i) {
-                    for(std::size_t j = 0; j < Cols; ++j)
-                        ESP_LOGI("Mat::print", "%.2f", _data[i * Cols + j]);
+                for(std::size_t i=0; i<Rows; ++i) {
+                    for(std::size_t j=0; j<Cols; ++j)
+                        ESP_LOGI("Mat::print", "%.2f", _data[i*Cols + j]);
                     ESP_LOGI("Mat::print", "");
                 }
                 #else
-                for(std::size_t i = 0; i < Rows; ++i) {
-                    for(std::size_t j = 0; j < Cols; ++j)
-                        std::cout << _data[i * Cols + j] << " ";
+                for(std::size_t i=0; i<Rows; ++i) {
+                    for(std::size_t j=0; j<Cols; ++j)
+                        std::cout << _data[i*Cols + j] << " ";
                     std::cout << std::endl;
                 }
                 #endif
             }
 
-            // operators
-            constexpr Matrix operator+(const Matrix& rhs) const {
-                Matrix result;
+            // OPERATORS
 
-                for(std::size_t i=0; i<Rows*Cols; ++i)
-                    result._data[i] = _data[i] + rhs._data[i];
+            // matrix assignment
+            template<typename U>
+            constexpr Matrix& operator=(const U (&other)[Rows][Cols]) {
+                for(std::size_t r=0; r<Rows; ++r)
+                    for(std::size_t c=0; c<Cols; ++c)
+                        _data[r*Cols + c] = static_cast<T>(other[r][c]);
 
-                return result;
+                return *this;
             }
-
-            constexpr Matrix& operator+=(const Matrix& rhs) {
+            constexpr Matrix& operator=(const Matrix& other) {
                 for(std::size_t i=0; i<Rows*Cols; ++i)
-                    _data[i] += rhs._data[i];
+                    _data[i] = other._data[i];
 
                 return *this;
             }
 
-            // subtraction
-            constexpr Matrix operator-(const Matrix& rhs) const {
-                Matrix result;
-
+            // matrix addition in-place
+            constexpr Matrix& operator+=(const Matrix& other) {
                 for(std::size_t i=0; i<Rows*Cols; ++i)
-                    result._data[i] = _data[i] - rhs._data[i];
-
-                return result;
-            }
-
-            constexpr Matrix& operator-=(const Matrix& rhs) {
-                for(std::size_t i=0; i<Rows*Cols; ++i)
-                    _data[i] -= rhs._data[i];
+                    _data[i] += other._data[i];
 
                 return *this;
             }
 
-            // scalar
-            constexpr Matrix operator*(T scalar) const {
-                Matrix result;
-
+            // matrix subtraction in-place
+            constexpr Matrix& operator-=(const Matrix& other) {
                 for(std::size_t i=0; i<Rows*Cols; ++i)
-                    result._data[i] = _data[i] * scalar;
+                    _data[i] -= other._data[i];
 
-                return result;
+                return *this;
             }
 
-            constexpr Matrix operator/(T scalar) const {
-                Matrix result;
-
+            // scalar multiplication in-place
+            constexpr Matrix& operator*=(const T& scalar) {
                 for(std::size_t i=0; i<Rows*Cols; ++i)
-                    result._data[i] = _data[i] / scalar;
+                    _data[i] *=  scalar;
 
-                return result;
+                return *this;
+            }
+
+            // scalar division in-place
+            constexpr Matrix& operator/=(const T& scalar) {
+                for(std::size_t i=0; i<Rows*Cols; ++i)
+                    _data[i] /= scalar;
+
+                return *this;
             }
 
             // identity
@@ -153,12 +151,51 @@ namespace gnc
         private:
             std::array<T, Rows * Cols> _data;
     };
+
+    // OPERATORS
+
+    // matrix addition
+    template <typename T, std::size_t Rows, std::size_t Cols>
+    constexpr Matrix<T, Rows, Cols> operator+(Matrix<T, Rows, Cols> lhs, const Matrix<T, Rows, Cols>& rhs) {
+        lhs += rhs;
+        return lhs;
+    }
+
+    // matrix subtraction
+    template <typename T, std::size_t Rows, std::size_t Cols>
+    constexpr Matrix<T, Rows, Cols> operator-(Matrix<T, Rows, Cols> lhs, const Matrix<T, Rows, Cols>& rhs) {
+        lhs -= rhs;
+        return lhs;
+    }
+
+    // scalar multiplication
+    template <typename T, std::size_t Rows, std::size_t Cols>
+    constexpr Matrix<T, Rows, Cols> operator*(Matrix<T, Rows, Cols> mat, const T& scalar) {
+        mat *= scalar;
+        return mat;
+    }
+    template <typename T, std::size_t Rows, std::size_t Cols>
+    constexpr Matrix<T, Rows, Cols> operator*(const T& scalar, Matrix<T, Rows, Cols> mat) {
+        mat *= scalar;
+        return mat;
+    }
+
+    // scalar division
+    template <typename T, std::size_t Rows, std::size_t Cols>
+    constexpr Matrix<T, Rows, Cols> operator/(Matrix<T, Rows, Cols> mat, const T& scalar) {
+        mat /= scalar;
+        return mat;
+    }
+
+    using Mat2f = Matrix<float, 2, 2>;
+    using Mat3f = Matrix<float, 3, 3>;
+    using Mat4f = Matrix<float, 4, 4>;
 }
 
 // include specific operator implementations
 #include "detail/matrix_ops_generic.hpp"
 
-#ifdef LIBGNC_USE_SIMD
+#if defined(LIBGNC_USE_SIMD) && (LIBGNC_USE_SIMD == 1)
 #include "detail/matrix_ops_simd.hpp"
 #endif
 
@@ -186,5 +223,17 @@ namespace gnc
     template<typename T, std::size_t N>
     constexpr T trace(const Matrix<T, N, N>& mat) {
         return detail::trace_impl(mat);
+    }
+
+    // matrix determinant
+    template<typename T, std::size_t N>
+    constexpr T determinant(const Matrix<T, N, N>& mat) {
+        return detail::determinant_impl(mat);
+    }
+
+    // matrix inverse
+    template<typename T, std::size_t N>
+    constexpr Matrix<T, N, N> inverse(const Matrix<T, N, N>& mat) {
+        return detail::inverse_impl(mat);
     }
 }

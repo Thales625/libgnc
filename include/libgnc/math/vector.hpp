@@ -10,6 +10,8 @@
 #include <iostream>
 #endif
 
+#include "libgnc/config.hpp"
+
 #include "matrix.hpp"
 
 namespace gnc
@@ -47,8 +49,45 @@ namespace gnc
                 return _data.data();
             }
 
+            template<std::size_t M>
+            constexpr Vec<T, M> head() const {
+                static_assert(M <= N);
+
+                Vec<T, M> result;
+
+                for(std::size_t i=0; i<M; ++i)
+                    result[i] = _data[i];
+
+                return result;
+            }
+
+            template<std::size_t M>
+            constexpr Vec<T, M> tail() const {
+                static_assert(M <= N);
+
+                Vec<T, M> result;
+
+                constexpr std::size_t start = N - M;
+
+                for(std::size_t i=0; i<M; ++i)
+                    result[i] = _data[start + i];
+
+                return result;
+            }
+
+            template<std::size_t Start, std::size_t Length>
+            constexpr Vec<T, Length> segment() const {
+                static_assert(Start + Length <= N);
+
+                Vec<T, Length> result;
+
+                for(std::size_t i=0; i<Length; ++i)
+                    result[i] = _data[Start + i];
+
+                return result;
+            }
+
             // methods
-            [[nodiscard]]
             constexpr std::size_t size() const {
                 return N;
             }
@@ -56,7 +95,7 @@ namespace gnc
             constexpr void print() const {
                 #ifdef ESP_PLATFORM
                 for(std::size_t i=0; i<N; ++i) {
-                    ESP_LOGI("Vec::print", "%.2f", _data[i]);
+                    ESP_LOGI("VEC", "%.2f", _data[i]);
                 }
                 #else
                 for(std::size_t i=0; i<N; ++i) {
@@ -77,6 +116,15 @@ namespace gnc
             }
 
             // OPERATORS
+
+            // vector assignment
+            template<typename U>
+            constexpr Vec& operator=(const U (&other)[N]) {
+                for(std::size_t i=0; i<N; ++i)
+                    _data[i] = static_cast<T>(other[i]);
+
+                return *this;
+            }
 
             // vector addition in-place
             constexpr Vec& operator+=(const Vec& other) {
@@ -122,33 +170,33 @@ namespace gnc
 
     // vector addition
     template<typename T, std::size_t N>
-    constexpr Vec<T,N> operator+(Vec<T,N> lhs, const Vec<T,N>& rhs) {
+    constexpr Vec<T, N> operator+(Vec<T, N> lhs, const Vec<T, N>& rhs) {
         lhs += rhs;
         return lhs;
     }
 
     // vector subtraction
     template<typename T, std::size_t N>
-    constexpr Vec<T,N> operator-(Vec<T,N> lhs, const Vec<T,N>& rhs) {
+    constexpr Vec<T, N> operator-(Vec<T, N> lhs, const Vec<T, N>& rhs) {
         lhs -= rhs;
         return lhs;
     }
 
     // scalar multiplication
     template<typename T, std::size_t N>
-    constexpr Vec<T,N> operator*(Vec<T,N> vec, const T& scalar) {
+    constexpr Vec<T, N> operator*(Vec<T, N> vec, const T& scalar) {
         vec *= scalar;
         return vec;
     }
     template<typename T, std::size_t N>
-    constexpr Vec<T,N> operator*(const T& scalar, Vec<T,N> vec) {
+    constexpr Vec<T, N> operator*(const T& scalar, Vec<T, N> vec) {
         vec *= scalar;
         return vec;
     }
 
     // scalar division
     template<typename T, std::size_t N>
-    constexpr Vec<T,N> operator/(Vec<T,N> vec, const T& scalar) {
+    constexpr Vec<T, N> operator/(Vec<T, N> vec, const T& scalar) {
         vec /= scalar;
         return vec;
     }
@@ -161,38 +209,33 @@ namespace gnc
 // include specific operator implementations
 #include "detail/vector_ops_generic.hpp"
 
-#ifdef LIBGNC_USE_SIMD
+#if defined(LIBGNC_USE_SIMD) && (LIBGNC_USE_SIMD == 1)
 #include "detail/vector_ops_simd.hpp"
 #endif
 
 namespace gnc
 {
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T dot(const Vec<T, N>& a, const Vec<T, N>& b) {
         return detail::dot_impl(a, b);
     }
 
     template<typename T>
-    [[nodiscard]]
     constexpr Vec<T, 3> cross(const Vec<T, 3>& a, const Vec<T, 3>& b) {
         return detail::cross_impl(a, b);
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T squared_norm(const Vec<T, N>& v) {
         return detail::squared_norm_impl(v);
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     T norm(const Vec<T, N>& v) {
         return detail::norm_impl(v);
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     Vec<T, N> normalized(const Vec<T, N>& v) {
         const T n = norm(v);
 
@@ -204,11 +247,10 @@ namespace gnc
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T sum(const Vec<T, N>& v) {
         T result{};
 
-        for (std::size_t i=0; i<N; ++i) {
+        for(std::size_t i=0; i<N; ++i) {
             result += v[i];
         }
 
@@ -216,19 +258,16 @@ namespace gnc
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T mean(const Vec<T, N>& v) {
         return sum(v) / static_cast<T>(N);
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T squared_distance(const Vec<T, N>& a, const Vec<T, N>& b) {
         return squared_norm(a - b);
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     T distance(const Vec<T, N>& a, const Vec<T, N>& b) {
         return norm(a - b);
     }

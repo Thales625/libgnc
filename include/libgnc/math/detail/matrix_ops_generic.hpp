@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cmath>
+
+#include "libgnc/assert.hpp"
+
 #include "matrix_fwd.hpp"
 #include "vector_fwd.hpp"
 
@@ -66,14 +70,71 @@ namespace gnc::detail
         return result;
     }
 
-    // identity
+    // determinant (Laplace)
+    template<typename T>
+    constexpr T determinant_impl(const Matrix<T, 1, 1>& mat) {
+        return mat(0, 0);
+    }
+
     template<typename T, std::size_t N>
-    constexpr Matrix<T, N, N> identity_impl() {
-        Matrix<T, N, N> result;
+    constexpr T determinant_impl(const Matrix<T, N, N>& mat) {
+        T det{};
+
+        for(std::size_t col=0; col<N; ++col) {
+            Matrix<T, N-1, N-1> minor;
+
+            for(std::size_t r=1; r<N; ++r) {
+                std::size_t mc=0;
+
+                for(std::size_t c=0; c<N; ++c) {
+                    if(c == col) continue;
+
+                    minor(r-1, mc++) = mat(r, c);
+                }
+            }
+
+            const T sign = (col % 2 == 0) ? T(1) : T(-1);
+
+            det += sign * mat(0, col) * determinant_impl(minor);
+        }
+
+        return det;
+    }
+
+    // inverse (Gauss-Jordan)
+    template<typename T, std::size_t N>
+    constexpr Matrix<T, N, N> inverse_impl(const Matrix<T, N, N>& mat) {
+        Matrix<T, N, N> a = mat;
+        Matrix<T, N, N> inv;
 
         for(std::size_t i=0; i<N; ++i)
-            result(i, i) = T(1);
+            inv(i, i) = T(1);
 
-        return result;
+        for(std::size_t i=0; i<N; ++i) {
+            T pivot = a(i, i);
+
+            // check if singular matrix
+            LIBGNC_ASSERT(std::abs(pivot) >= T(1e-8) && "Trying to invert a singular matrix");
+
+            const T inv_pivot = T(1) / pivot;
+
+            for(std::size_t j=0; j<N; ++j) {
+                a(i, j) *= inv_pivot;
+                inv(i, j) *= inv_pivot;
+            }
+
+            for(std::size_t row = 0; row < N; ++row) {
+                if(row == i) continue;
+
+                const T factor = a(row, i);
+
+                for(std::size_t col=0; col<N; ++col) {
+                    a(row, col) -= factor * a(i, col);
+                    inv(row, col) -= factor * inv(i, col);
+                }
+            }
+        }
+
+        return inv;
     }
 }

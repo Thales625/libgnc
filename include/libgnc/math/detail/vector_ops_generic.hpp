@@ -6,7 +6,6 @@
 namespace gnc::detail
 {
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T dot_impl(const Vec<T, N>& a, const Vec<T, N>& b) {
         T result{};
 
@@ -18,7 +17,6 @@ namespace gnc::detail
     }
 
     template<typename T>
-    [[nodiscard]]
     constexpr Vec<T, 3> cross_impl(const Vec<T, 3>& a, const Vec<T, 3>& b) {
         return Vec<T, 3>{
             a[1] * b[2] - a[2] * b[1],
@@ -28,13 +26,11 @@ namespace gnc::detail
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     constexpr T squared_norm_impl(const Vec<T, N>& v) {
         return dot_impl(v, v);
     }
 
     template<typename T, std::size_t N>
-    [[nodiscard]]
     T norm_impl(const Vec<T, N>& v) {
         return std::sqrt(squared_norm_impl(v));
     }
