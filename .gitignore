@@ -3,3 +3,7 @@
 **/build_pc/
 **/sdkconfig
 **/sdkconfig.old
+
+# simulation
+**/__pycache__/
+simulation/bindings/libavionics.*

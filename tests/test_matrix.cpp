@@ -2,6 +2,24 @@
 #include "libgnc/math/vector.hpp"
 
 int main() {
+    gnc::Matrix<float, 3, 3> A{1,2,3, 4,5,6, 7,8,9};
+    gnc::Matrix<float, 3, 3> B{1,2,3, 4,5,6, 7,8,9};
+    gnc::Matrix<float, 3, 3> P{1,2,3, 4,5,6, 7,8,9};
+    gnc::Matrix<float, 3, 3> Q{1,2,3, 4,5,6, 7,8,9};
+
+    gnc::Vec3f x{3, 2, 1};
+    gnc::Vec3f u{3, 2, 1};
+
+    auto x_next = A * x + B * u;
+    auto P_next = A * P * transpose(A) + Q;
+
+    x_next.print();
+    P_next.print();
+
+    std::cout << "DET A: " << gnc::determinant(A) << std::endl;
+
+    return 0;
+
     gnc::Matrix<float, 3, 3> a{1,2,3, 4,5,6, 7,8,9};
     gnc::Matrix<float, 3, 3> b{1,2,3, 4,5,6, 7,8,9};
 

@@ -1,7 +1,7 @@
 BUILD_DIR = build_pc
 TEST_DIR = tests
 
-.PHONY: all build test clean clean-all test-matrix test-vector
+.PHONY: all build test clean clean-all test-matrix test-vector test-kalman
 
 all: build
 
@@ -25,6 +25,14 @@ test-matrix: build
 # run the vector test
 test-vector: build
 	./$(BUILD_DIR)/$(TEST_DIR)/run_vector_test
+
+# run the quaternion test
+test-quat: build
+	./$(BUILD_DIR)/$(TEST_DIR)/run_quat_test
+
+# run the kalman test
+test-kalman: build
+	./$(BUILD_DIR)/$(TEST_DIR)/run_kalman_test
 
 # clean build artifacts without deleting the build directory
 clean:

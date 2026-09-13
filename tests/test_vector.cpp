@@ -1,5 +1,3 @@
-// #define LIBGNC_USE_SIMD
-
 #include <libgnc/math/vector.hpp>
 
 int main() {
