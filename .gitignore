@@ -7,3 +7,6 @@
 # simulation
 **/__pycache__/
 simulation/bindings/libavionics.*
+
+# others
+compile_commands.json
