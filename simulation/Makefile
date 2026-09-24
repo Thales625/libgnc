@@ -8,7 +8,7 @@ build: $(BUILD_DIR)/Makefile
 	cmake --build $(BUILD_DIR)
 
 live: build
-	python live.py
+	python -m live
 
 static: build
 	python static.py

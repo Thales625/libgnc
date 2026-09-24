@@ -59,7 +59,7 @@ if __name__ == "__main__":
     est_axis_z, = ax.plot([], [], [], "m-", lw=3)
 
     rotor_vectors = []
-    for rotor in backend.drone.rotors:
+    for rotor in backend.vehicle.propulsions:
         line, = ax.plot([], [], [], "r-" if rotor.clockwise else "g-", lw=3, alpha=0.8)
         rotor_vectors.append(line)
 
@@ -115,8 +115,8 @@ if __name__ == "__main__":
 
             t += SimulationConfig.dt
 
-        pos = backend.drone.position
-        rot = backend.drone.rotation
+        pos = backend.vehicle.position
+        rot = backend.vehicle.rotation
 
         # plot target position
         target_plot._offsets3d = (
@@ -178,10 +178,10 @@ if __name__ == "__main__":
         est_axis_z.set_3d_properties([est_pos[2], est_pos[2] + est_drone_z_axis[2]])
 
         # rotors
-        for i, rotor in enumerate(backend.drone.rotors):
-            rotor_pos_world = pos + rotate_vector(rot, rotor.pos)
+        for i, rotor in enumerate(backend.vehicle.propulsions):
+            rotor_pos_world = pos + rotate_vector(rot, rotor.position_body)
 
-            rotor_thrust_body = np.array([0., 0., rotor.thrust * 0.2])
+            rotor_thrust_body = 0.2 * rotor.force
             rotor_thrust_world = rotate_vector(rot, rotor_thrust_body)
 
             rotor_vectors[i].set_data(
@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
         # update control plot
         for i in range(4):
-            ctrl_arr[i].append(backend.drone.rotors[i].control)
+            ctrl_arr[i].append(backend.vehicle.propulsions[i].throttle)
             line_controls[i].set_data(t_arr, ctrl_arr[i])
 
         ax_control.relim()

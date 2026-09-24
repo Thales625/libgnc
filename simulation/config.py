@@ -3,7 +3,7 @@ import numpy as np
 
 from utils.quaternion import quaternion_from_euler
 
-from environment.earth import Earth
+from core.earth import Earth
 
 def target_position(t: float) -> np.ndarray:
     return np.array([

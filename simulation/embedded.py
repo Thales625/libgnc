@@ -1,6 +1,6 @@
-from environment.sensors import Accelerometer, Gyroscope, Barometer
-from environment.drone import Drone
-from environment.rotor import Rotor
+from core.sensors import Accelerometer, Gyroscope, Barometer
+from core.rotor import Rotor
+from vehicles.quadcopter import Quadcopter
 from config import SimulationConfig, DroneConfig, AvionicsConfig, RotorConfig, InitialState, SensorsConfig
 from config import target_position
 
@@ -10,11 +10,11 @@ import numpy as np
 
 class EmbeddedBackend():
     def __init__(self):
-        self.drone = Drone(DroneConfig.mass, DroneConfig.moi, DroneConfig.size)
-        self.drone.position = InitialState.s0
-        self.drone.velocity = InitialState.v0
-        self.drone.rotation = InitialState.q0
-        self.drone.angular_velocity = InitialState.w0
+        self.vehicle = Quadcopter(DroneConfig.mass, DroneConfig.moi, DroneConfig.size)
+        self.vehicle.position = InitialState.s0
+        self.vehicle.velocity = InitialState.v0
+        self.vehicle.rotation = InitialState.q0
+        self.vehicle.angular_velocity = InitialState.w0
 
         rotor_fr = Rotor(
             np.array([DroneConfig.size, DroneConfig.size, 0.]),
@@ -54,20 +54,20 @@ class EmbeddedBackend():
             clockwise=True,
         )
 
-        self.drone.add_rotor(rotor_fr)
-        self.drone.add_rotor(rotor_fl)
+        self.vehicle.add_propulsion(rotor_fr)
+        self.vehicle.add_propulsion(rotor_fl)
 
-        self.drone.add_rotor(rotor_br)
-        self.drone.add_rotor(rotor_bl)
+        self.vehicle.add_propulsion(rotor_br)
+        self.vehicle.add_propulsion(rotor_bl)
 
         # control
         self.target_state = np.zeros(12)
         self.optimal_control = np.zeros(4)
 
         # sensors
-        self.accelerometer = self.drone.add_sensor(Accelerometer(self.drone.accel_body_state, interval=SensorsConfig.acc_interval, noise=SensorsConfig.acc_noise))
-        self.gyro = self.drone.add_sensor(Gyroscope(self.drone.state, interval=SensorsConfig.gyro_interval, noise=SensorsConfig.gyro_noise))
-        self.baro = self.drone.add_sensor(Barometer(self.drone.state, interval=SensorsConfig.baro_interval, noise=SensorsConfig.baro_noise))
+        self.accelerometer = self.vehicle.add_sensor(Accelerometer(self.vehicle.accel_body_state, interval=SensorsConfig.acc_interval, noise=SensorsConfig.acc_noise))
+        self.gyro = self.vehicle.add_sensor(Gyroscope(self.vehicle.state, interval=SensorsConfig.gyro_interval, noise=SensorsConfig.gyro_noise))
+        self.baro = self.vehicle.add_sensor(Barometer(self.vehicle.state, interval=SensorsConfig.baro_interval, noise=SensorsConfig.baro_noise))
 
         # avionics
         self.avionics = AvionicsSim(AvionicsConfig.interval)
@@ -77,7 +77,7 @@ class EmbeddedBackend():
 
     def sim_loop(self, t):
         # update simulation
-        self.drone.update(SimulationConfig.dt, t)
+        self.vehicle.update(SimulationConfig.dt, t)
 
         # update target
         self.target_state[:3] = target_position(t)
@@ -91,7 +91,7 @@ class EmbeddedBackend():
         baro_val = self.baro()
 
         # force navigation - DEBUG
-        self.avionics.core.set_state(self.drone.state)
+        self.avionics.core.set_state(self.vehicle.state)
 
         # update avionics
         self.avionics.core.ut = int(t*1000) # ms
@@ -110,8 +110,10 @@ class EmbeddedBackend():
         '''
 
         # apply control
+        # self.drone.apply_control_input(self.avionics.core.rotor_cmd)
+
         for i, cmd in enumerate(self.avionics.core.rotor_cmd):
-            self.drone.rotors[i].control = cmd
+            self.vehicle.propulsions[i].throttle = cmd
 
     @property
     def estimated_state(self):

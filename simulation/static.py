@@ -31,13 +31,13 @@ if __name__ == "__main__":
             next_time_plot += StaticSimulationConfig.plot_dt
 
             # populate plot arrays
-            for i, value in enumerate([r.control for r in backend.drone.rotors]):
+            for i, value in enumerate([r.control for r in backend.vehicle.rotors]):
                 cmd_arr[i].append(value)
 
             for i, value in enumerate(backend.optimal_control):
                 ctrl_input_arr[i].append(value)
 
-            for i, value in enumerate(backend.drone.state):
+            for i, value in enumerate(backend.vehicle.state):
                 true_state_arr[i].append(value)
 
             for i, value in enumerate(backend.estimated_state):
