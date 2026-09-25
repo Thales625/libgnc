@@ -1,14 +1,14 @@
-from embedded import EmbeddedBackend
-
-from config import SimulationConfig, StaticSimulationConfig
-from utils.quaternion import quaternion_to_euler
-
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-if __name__ == "__main__":
-    backend = EmbeddedBackend()
+from config import SimulationConfig, StaticSimulationConfig
+from utils.quaternion import quaternion_to_euler
+
+from core.vehicle import Vehicle
+
+def run_static(vehicle: Vehicle, sim_loop: method):
+    global t
 
     t_arr = []
     cmd_arr = defaultdict(list)
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     print("[simulation] starting...")
 
     for t in np.arange(0, StaticSimulationConfig.total_time, SimulationConfig.dt):
-        backend.sim_loop(t)
+        sim_loop(t)
 
         if t > next_time_plot:
             print(f"[simulation] {t:.2f}/{StaticSimulationConfig.total_time:.2f}s ({t/StaticSimulationConfig.total_time*100:.1f}%)")
@@ -31,19 +31,20 @@ if __name__ == "__main__":
             next_time_plot += StaticSimulationConfig.plot_dt
 
             # populate plot arrays
-            for i, value in enumerate([r.control for r in backend.vehicle.rotors]):
+            for i, value in enumerate([prop.throttle for prop in vehicle.propulsions]):
                 cmd_arr[i].append(value)
 
-            for i, value in enumerate(backend.optimal_control):
+            # for i, value in enumerate(backend.optimal_control):
+            for i in range(4):
                 ctrl_input_arr[i].append(value)
 
-            for i, value in enumerate(backend.vehicle.state):
+            for i, value in enumerate(vehicle.state):
                 true_state_arr[i].append(value)
 
-            for i, value in enumerate(backend.estimated_state):
+            for i, value in enumerate(vehicle.avionics.core.estimated_state()):
                 est_state_arr[i].append(value)
 
-            for i, value in enumerate(backend.control.target_state):
+            for i, value in enumerate(vehicle.avionics.core.get_target_state()):
                 tgt_state_arr[i].append(value)
 
             t_arr.append(t)
@@ -136,3 +137,8 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
+
+if __name__ == "__main__":
+    from .setup import vehicle, sim_loop
+
+    run_static(vehicle, sim_loop)

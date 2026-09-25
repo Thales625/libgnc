@@ -1,19 +1,36 @@
-BUILD_DIR := build
+SCENARIO ?= quadcopter
 
-$(BUILD_DIR)/Makefile: CMakeLists.txt
-	mkdir -p $(BUILD_DIR)
-	cd $(BUILD_DIR) && cmake ..
+BUILD_DIR := build/$(SCENARIO)
 
-build: $(BUILD_DIR)/Makefile
+.PHONY: configure build clean quadcopter_live quadcopter_static airplane_live airplane_static
+
+configure:
+	cmake -B $(BUILD_DIR) -DSCENARIO=$(SCENARIO)
+
+build: configure
 	cmake --build $(BUILD_DIR)
 
-live: build
-	python -m live
-
-static: build
-	python static.py
-
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build
 
-.PHONY: build live static clean
+# ------- QUADCOPTER -------
+
+quadcopter_build:
+	$(MAKE) build SCENARIO=quadcopter
+
+quadcopter_live: quadcopter_build
+	python scenarios/quadcopter/live.py
+
+quadcopter_static: quadcopter_build
+	python scenarios/quadcopter/static.py
+
+# ------- AIRPLANE -------
+
+airplane_build:
+	$(MAKE) build SCENARIO=airplane
+
+airplane_live: airplane_build
+	python scenarios/airplane/live.py
+
+airplane_static: airplane_build
+	python scenarios/airplane/static.py

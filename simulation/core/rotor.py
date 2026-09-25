@@ -48,10 +48,10 @@ class Rotor(Propulsion):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
-    from simulation.config import DroneConfig, RotorConfig
+    from simulation.config import RotorConfig
 
     rotor = Rotor(
-        np.array([DroneConfig.size, DroneConfig.size, 0.]),
+        np.array([0., 0., 0.]),
         RotorConfig.kt,
         RotorConfig.b,
         RotorConfig.rpm,

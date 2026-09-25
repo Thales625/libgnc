@@ -2,15 +2,12 @@ import numpy as np
 
 from utils import quaternion_multiply, quaternion_conjugate, rotate_vector
 
-from core.rotor import Rotor
 from core.earth import Earth
 from core.vehicle import Vehicle
 
-from config import RotorConfig
-
 class Quadcopter(Vehicle):
-    def __init__(self, mass:float, moi:np.ndarray, size:float):
-        super().__init__(mass, moi)
+    def __init__(self, mass:float, moi:np.ndarray, size:float, avionics):
+        super().__init__(mass, moi, avionics)
 
         self.accel_body_state = np.array([0., 0., 0.])
 
@@ -59,31 +56,3 @@ class Quadcopter(Vehicle):
             d_rot,     # dRot
             ang_accel, # dAngVel
         ])
-
-    # motor mixing algorithm (without priority)
-    def MMA(self, thrust:float, roll_torque:float, pitch_torque:float, yaw_torque:float) -> list[float]:
-        delta_roll = roll_torque / (4 * self.size)
-        delta_pitch = pitch_torque / (4 * self.size)
-        delta_yaw = yaw_torque / (4 * RotorConfig.b_kt_ratio)
-
-        thrust /= 4.0
-
-        f_fr = thrust - delta_pitch + delta_yaw + delta_roll
-        f_fl = thrust - delta_pitch - delta_yaw - delta_roll
-        f_br = thrust + delta_pitch - delta_yaw + delta_roll
-        f_bl = thrust + delta_pitch + delta_yaw - delta_roll
-
-        return [f_fr, f_fl, f_br, f_bl]
-
-    @staticmethod
-    def force_to_throttle(force:float, rotor:Rotor) -> float:
-        max_thrust = rotor.kt * (rotor.max_rotation**2)
-
-        return np.sqrt(np.clip(force, 0.0, max_thrust) / max_thrust)
-
-    def apply_control_input(self, u:np.ndarray):
-        thrust, roll_torque, pitch_torque, yaw_torque = u
-
-        # command
-        for i, force in enumerate(self.MMA(thrust, roll_torque, pitch_torque, yaw_torque)):
-            self.propulsions[i].throttle = self.force_to_throttle(force, self.propulsions[i])

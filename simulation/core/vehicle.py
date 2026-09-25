@@ -7,7 +7,7 @@ from .sensors import Sensor
 from .solver import RK4
 
 class Vehicle:
-    def __init__(self, mass:float, moi:np.ndarray):
+    def __init__(self, mass:float, moi:np.ndarray, avionics):
         self.mass = mass
         self.moi = moi
 
@@ -20,10 +20,13 @@ class Vehicle:
         ])
 
         self.propulsions = []
-        self.sensors = []
+        self.sensors = {}
 
         # solver
         self.solver = RK4(self.state, self.dynamics)
+
+        # avionics
+        self.avionics = avionics
 
     def u(self, force_body:np.ndarray, torque_body:np.ndarray) -> np.ndarray:
         raise NotImplementedError
@@ -31,7 +34,13 @@ class Vehicle:
     def dynamics(self, x:np.ndarray, u:np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
+    def control_loop(self) -> None:
+        raise NotImplementedError
+
     def update(self, dt:float, t:float) -> None:
+        """
+        Update the vehicle state over a time step & sensors
+        """
         force_body = np.zeros(3)
         torque_body = np.zeros(3)
 
@@ -52,15 +61,15 @@ class Vehicle:
             self.rotation = np.array([1.0, 0.0, 0.0, 0.0])
 
         # update sensors
-        for sensor in self.sensors:
+        for sensor in self.sensors.values():
             sensor.update(t)
 
     def add_propulsion(self, propulsion:Propulsion) -> Propulsion:
         self.propulsions.append(propulsion)
         return propulsion
 
-    def add_sensor(self, sensor:Sensor) -> Sensor:
-        self.sensors.append(sensor)
+    def add_sensor(self, name:str, sensor:Sensor) -> Sensor:
+        self.sensors[name] = sensor
         return sensor
 
     def linearize(self, x_eq:np.ndarray, u_eq:np.ndarray, dt:float, eps=1e-6) -> list[np.ndarray]:

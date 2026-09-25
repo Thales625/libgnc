@@ -3,8 +3,6 @@ import numpy as np
 
 from utils.quaternion import quaternion_from_euler
 
-from core.earth import Earth
-
 def target_position(t: float) -> np.ndarray:
     return np.array([
         np.sin(0.5*t),
@@ -45,13 +43,6 @@ class RotorConfig:
     noise: ClassVar[float] = 1e-3
 
     b_kt_ratio = b / kt
-
-class DroneConfig:
-    mass: ClassVar[float] = 0.2
-    size: ClassVar[float] = 0.2
-
-    moi = (mass * size**2) * np.array([0.5, 0.5,  1])
-    weight = mass * Earth.g
 
 class InitialState:
     s0: ClassVar[np.ndarray] = np.zeros(3)
