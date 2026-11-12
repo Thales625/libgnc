@@ -4,8 +4,8 @@ import numpy as np
 from core.propulsion import Propulsion
 
 class Rotor(Propulsion):
-    def __init__(self, position_body:np.ndarray, kt:float, b:float, max_rpm:float, noise=1e-8, time_constant=0.05, clockwise=True):
-        super().__init__(position_body, np.array([0., 0., 1.]))
+    def __init__(self, position_body:np.ndarray, direction_body:np.ndarray, kt:float, b:float, max_rpm:float, noise=1e-8, time_constant=0.05, clockwise=True):
+        super().__init__(position_body, direction_body)
 
         # params
         self.clockwise = clockwise
@@ -14,6 +14,8 @@ class Rotor(Propulsion):
         self.tau = time_constant
         self.noise = noise
         self.max_rotation = max_rpm * 0.10472 # rad/s
+
+        self.max_thrust = kt * self.max_rotation
 
         self._rotation = 0.
         self._thrust = 0.

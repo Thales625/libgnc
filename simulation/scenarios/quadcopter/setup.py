@@ -1,7 +1,6 @@
 import numpy as np
 
 from .config import DroneConfig
-
 from config import SimulationConfig, RotorConfig, InitialState, SensorsConfig, AvionicsConfig
 from config import target_position
 
@@ -24,6 +23,7 @@ vehicle.angular_velocity = InitialState.w0
 
 rotor_fr = Rotor(
     np.array([DroneConfig.size, DroneConfig.size, 0.]),
+    np.array([0., 0., 1.]),
     RotorConfig.kt,
     RotorConfig.b,
     RotorConfig.rpm,
@@ -33,6 +33,7 @@ rotor_fr = Rotor(
 )
 rotor_fl = Rotor(
     np.array([DroneConfig.size, -DroneConfig.size, 0.]),
+    np.array([0., 0., 1.]),
     RotorConfig.kt,
     RotorConfig.b,
     RotorConfig.rpm,
@@ -43,6 +44,7 @@ rotor_fl = Rotor(
 
 rotor_br = Rotor(
     np.array([-DroneConfig.size, DroneConfig.size, 0.]),
+    np.array([0., 0., 1.]),
     RotorConfig.kt,
     RotorConfig.b,
     RotorConfig.rpm,
@@ -52,6 +54,7 @@ rotor_br = Rotor(
 )
 rotor_bl = Rotor(
     np.array([-DroneConfig.size, -DroneConfig.size, 0.]),
+    np.array([0., 0., 1.]),
     RotorConfig.kt,
     RotorConfig.b,
     RotorConfig.rpm,

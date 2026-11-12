@@ -9,8 +9,6 @@ from utils.quaternion import rotate_vector
 from core.vehicle import Vehicle
 
 def run_live(vehicle: Vehicle, sim_loop: method):
-    global t
-
     # control plot
     fig = plt.figure(figsize=(17, 9))
     gs = fig.add_gridspec(2, 2)
@@ -86,6 +84,7 @@ def run_live(vehicle: Vehicle, sim_loop: method):
     ctrl_arr = [[], [], [], []]
 
     # loop
+    global camera_follow, t
     camera_follow = False
     t = 0.
 
@@ -203,9 +202,9 @@ def run_live(vehicle: Vehicle, sim_loop: method):
         ax.view_init(elev=ax.elev, azim=ax.azim)
 
         # update control plot
-        for i in range(4):
-            ctrl_arr[i].append(vehicle.propulsions[i].throttle)
-            line_controls[i].set_data(t_arr, ctrl_arr[i])
+        # for i in range(4):
+            # ctrl_arr[i].append(vehicle.propulsions[i].throttle)
+            # line_controls[i].set_data(t_arr, ctrl_arr[i])
 
         ax_control.relim()
         ax_control.autoscale_view(scaley=False)

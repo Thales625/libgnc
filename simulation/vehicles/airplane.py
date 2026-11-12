@@ -2,13 +2,12 @@ import numpy as np
 
 from utils import quaternion_multiply, quaternion_conjugate, rotate_vector
 
-from core.rotor import Rotor
 from core.earth import Earth
 from core.vehicle import Vehicle
 
 class Airplane(Vehicle):
-    def __init__(self, mass:float, moi:np.ndarray):
-        super().__init__(mass, moi)
+    def __init__(self, mass:float, moi:np.ndarray, avionics):
+        super().__init__(mass, moi, avionics)
 
         self.accel_body_state = np.array([0., 0., 0.])
 
@@ -87,9 +86,8 @@ class Airplane(Vehicle):
         omega_quat = np.array([0., ang_vel[0], ang_vel[1], ang_vel[2]])
         d_rot = 0.5 * quaternion_multiply(rot, omega_quat)
 
-        drag_torque = (-self.k_rot_drag * np.linalg.norm(ang_vel)) * ang_vel
         coriolis_torque = np.cross(ang_vel, self.moi * ang_vel)
-        ang_accel = (torque_body + drag_torque - coriolis_torque) / self.moi
+        ang_accel = (torque_body - coriolis_torque) / self.moi
 
         return np.concatenate([
             vel,   # dPos
@@ -98,15 +96,3 @@ class Airplane(Vehicle):
             d_rot,     # dRot
             ang_accel, # dAngVel
         ])
-
-
-    @staticmethod
-    def force_to_throttle(force:float, rotor:Rotor) -> float:
-        max_thrust = rotor.kt * (rotor.max_rotation**2)
-
-        return np.sqrt(np.clip(force, 0.0, max_thrust) / max_thrust)
-
-    def apply_control_input(self, u:np.ndarray):
-        thrust, roll_torque, pitch_torque, yaw_torque = u
-
-        self.propulsions[0].throttle = self.force_to_throttle(thrust, self.propulsions[0])

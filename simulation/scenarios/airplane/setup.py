@@ -21,21 +21,18 @@ vehicle.velocity = InitialState.v0
 vehicle.rotation = InitialState.q0
 vehicle.angular_velocity = InitialState.w0
 
-rotor_push = Rotor(
-    np.array([-2.0, 0., 0.]),
-    RotorConfig.kt,
-    RotorConfig.b,
-    RotorConfig.rpm,
-    RotorConfig.noise,
-    time_constant=RotorConfig.tau,
-    clockwise=True,
+vehicle.add_propulsion(
+    Rotor(
+        np.array([-2.0, 0., 0.]),
+        np.array([0., 1., 0.]),
+        RotorConfig.kt,
+        RotorConfig.b,
+        RotorConfig.rpm,
+        RotorConfig.noise,
+        time_constant=RotorConfig.tau,
+        clockwise=True,
+    )
 )
-
-vehicle.add_propulsion(rotor_fr)
-vehicle.add_propulsion(rotor_fl)
-
-vehicle.add_propulsion(rotor_br)
-vehicle.add_propulsion(rotor_bl)
 
 accelerometer = vehicle.add_sensor("accelerometer", Accelerometer(vehicle.accel_body_state, interval=SensorsConfig.acc_interval, noise=SensorsConfig.acc_noise))
 gyroscope = vehicle.add_sensor("gyroscope", Gyroscope(vehicle.state, interval=SensorsConfig.gyro_interval, noise=SensorsConfig.gyro_noise))
@@ -57,19 +54,17 @@ def sim_loop(t:float) -> None:
     gyro_val = gyroscope()
     baro_val = barometer()
 
-    # force navigation - DEBUG
-    vehicle.avionics.core.set_state(vehicle.state)
-
     # update avionics data
     vehicle.avionics.core.data.ut = int(t*1000) # ms
     vehicle.avionics.core.data.accel = acc_val
     vehicle.avionics.core.data.gyro = gyro_val
     vehicle.avionics.core.data.altitude = float(baro_val[0])
 
+    # force navigation - DEBUG
+    vehicle.avionics.core.set_state(vehicle.state)
+
     # update avionics
     vehicle.avionics.update(t)
 
     # apply control
-    for i in range(len(vehicle.propulsions)):
-        cmd = vehicle.avionics.core.data.actuator_cmd[i]
-        vehicle.propulsions[i].throttle = cmd
+    vehicle.propulsions[0].throttle = vehicle.avionics.core.data.actuator_cmd[0]

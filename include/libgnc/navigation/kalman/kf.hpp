@@ -88,6 +88,7 @@ namespace gnc::navigation
             const auto I_KH = CovarianceMatrix::Identity() - (K * H);
 
             P_ = I_KH * P_ * transpose(I_KH) + K * R_adaptive * transpose(K);
+            P_ = static_cast<T>(0.5) * (P_ + transpose(P_));
         }
 
         constexpr void update(const MeasurementVector& z, const MeasurementMatrix& H) {

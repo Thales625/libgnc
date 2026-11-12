@@ -9,7 +9,11 @@ from utils.quaternion import rotate_vector
 from core.vehicle import Vehicle
 
 def run_live(vehicle: Vehicle, sim_loop: method):
-    global t
+    global zoom, axis_length, camera_follow, t
+    zoom = 5.
+    axis_length = 0.1
+    camera_follow = False
+    t = 0.
 
     # control plot
     fig = plt.figure(figsize=(17, 9))
@@ -21,8 +25,6 @@ def run_live(vehicle: Vehicle, sim_loop: method):
 
     target_plot = ax.scatter(*np.zeros(3), c="r", s=50, label="target position")
 
-    zoom = 5.
-    axis_length = 0.1
     ax.set_xlim([-zoom, zoom])
     ax.set_ylim([-zoom, zoom])
     ax.set_zlim([-zoom, zoom])
@@ -86,9 +88,6 @@ def run_live(vehicle: Vehicle, sim_loop: method):
     ctrl_arr = [[], [], [], []]
 
     # loop
-    camera_follow = False
-    t = 0.
-
     def on_key(event):
         global camera_follow
 
@@ -96,7 +95,7 @@ def run_live(vehicle: Vehicle, sim_loop: method):
             camera_follow = not camera_follow
 
     def on_scroll(event):
-        global zoom
+        global camera_follow, zoom
 
         if not camera_follow:
             return

@@ -10,6 +10,12 @@ def target_position(t: float) -> np.ndarray:
         0.# np.cos(1.*t)
     ])
 
+class InitialState:
+    s0: ClassVar[np.ndarray] = np.zeros(3)
+    v0: ClassVar[np.ndarray] = np.zeros(3)
+    q0: ClassVar[np.ndarray] = quaternion_from_euler(0., 0., 0., True)
+    w0: ClassVar[np.ndarray] = np.array([0., 0., 0.])
+
 class SimulationConfig:
     dt: ClassVar[float] = 10e-3
     ideal_navigation: ClassVar[bool] = True
@@ -43,9 +49,3 @@ class RotorConfig:
     noise: ClassVar[float] = 1e-3
 
     b_kt_ratio = b / kt
-
-class InitialState:
-    s0: ClassVar[np.ndarray] = np.zeros(3)
-    v0: ClassVar[np.ndarray] = np.zeros(3)
-    q0: ClassVar[np.ndarray] = quaternion_from_euler(0., 0., 0., True)
-    w0: ClassVar[np.ndarray] = np.array([0., 0., 0.])

@@ -32,6 +32,11 @@ namespace gnc
                 std::copy(init.begin(), init.end(), _data.begin());
             }
 
+            // zero
+            static constexpr Vec zero() {
+                return Vec{};
+            }
+
             // accessors
             constexpr T& operator[](std::size_t index) {
                 return _data[index];

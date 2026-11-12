@@ -19,10 +19,10 @@ quadcopter_build:
 	$(MAKE) build SCENARIO=quadcopter
 
 quadcopter_live: quadcopter_build
-	python scenarios/quadcopter/live.py
+	python -m scenarios.quadcopter.live
 
 quadcopter_static: quadcopter_build
-	python scenarios/quadcopter/static.py
+	python -m scenarios.quadcopter.static
 
 # ------- AIRPLANE -------
 
@@ -30,7 +30,7 @@ airplane_build:
 	$(MAKE) build SCENARIO=airplane
 
 airplane_live: airplane_build
-	python scenarios/airplane/live.py
+	python -m scenarios.airplane.live
 
 airplane_static: airplane_build
-	python scenarios/airplane/static.py
+	python -m scenarios.airplane.static

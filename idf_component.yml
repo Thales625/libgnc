@@ -4,9 +4,9 @@ description: >
   Mathematical and control library for embedded
   Guidance, Navigation and Control applications.
 
-url: "https://github.com/Thales625/esp-lib-gnc"
+url: "https://github.com/Thales625/libgnc"
 
-repository: "https://github.com/Thales625/esp-lib-gnc.git"
+repository: "https://github.com/Thales625/libgnc.git"
 
 
 license: "MIT"

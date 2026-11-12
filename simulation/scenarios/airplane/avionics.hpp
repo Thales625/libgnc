@@ -4,7 +4,7 @@
 
 #include "libgnc/math/vector.hpp"
 #include "libgnc/control/lqr/lqr.hpp"
-#include "libgnc/navigation/kalman/kalman.hpp"
+#include "libgnc/navigation/kalman/kf.hpp"
 
 #include <cmath>
 #include <iostream>
